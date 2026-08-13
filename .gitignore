@@ -1,0 +1,9 @@
+# 运行时产物（install.sh 生成，不入库）
+.venv/
+.wheels/
+config.env
+serve.log
+serve.pid
+sample/md_out/
+__pycache__/
+*.pyc

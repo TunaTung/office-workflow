@@ -1,0 +1,9 @@
+# office-workflow 依赖（2026-08-14 钉版）
+# torch / torchvision 由 install.sh 单独管理（CPU vs GPU cu126 分支），勿在此声明
+docling==2.119.0          # 版面/表格/公式/OCR 解析（不含 fastapi，serve 需下两行）
+fastapi>=0.111.0          # docling_server.py 常驻服务（官方 docling-serve 依赖 grpcio 装不上，自建）
+uvicorn>=0.30.0           # FastAPI 运行
+python-multipart>=0.0.9   # FastAPI Form 必需（docling_server.py 用 Form 收路径）
+pymupdf>=1.26.0           # pdf-inspector 分类失败时的 pymupdf 阈值兜底
+reportlab==5.0.0          # install 生成 sample（serve 预热 + 验证）
+firecrawl-anydoc>=0.1.7   # Office(docx/pptx/xlsx)→md（可选：不装则 Office 文档进失败清单，PDF 链不受影响）
