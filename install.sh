@@ -2,8 +2,8 @@
 # install.sh — 一键重建 office-workflow 环境（检测→venv→依赖→config→sample）
 #
 # 用法:
-#   bash install.sh                       # CPU 模式（PyPI 装 torch，能跑但扫描件慢）
-#   DOCLING_GPU=1 bash install.sh        # GPU 模式（NVIDIA 4060+；torch cu126 走阿里云镜像，~2.4GB）
+#   bash install.sh                       # 轻量版(默认):CPU torch ~200MB,Office/文字PDF/扫描件OCR 全覆盖
+#   DOCLING_GPU=1 bash install.sh        # 完整版:NVIDIA GPU + torch cu126 ~2.4GB(公式/批量扫描件秒级)
 #   DOCLING_LOCAL_WHEELS=/path/to/wheels bash install.sh  # 用本地 cu126 wheel 目录（离线/复用缓存）
 #
 # 幂等：已存在的步骤自动跳过，可重复运行。
@@ -79,7 +79,8 @@ elif [ "${DOCLING_GPU:-0}" = "1" ]; then
     exit 1
   fi
 else
-  echo "      CPU 模式：PyPI 装 torch（能用但扫描件慢，建议 GPU）"
+  echo "      轻量版：PyPI 装 CPU torch（~200MB）。Office/文字 PDF/扫描件 OCR 全覆盖；"
+  echo "      公式/批量扫描件较慢——非理工科、无公式需求到此即可，无需 2.4GB GPU 模型"
 fi
 echo "      安装 docling + 其余依赖..."
 PIP_INDEX_FLAG=""

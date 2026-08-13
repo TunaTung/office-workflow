@@ -2,7 +2,9 @@
 
 > 让 AI 读完本文就能在你的电脑上装起来。全部依赖开源，本仓库是"路由思想 + 五个坑解法"的参考实现。
 
-一句话定位：**把 docx/pptx/xlsx/PDF（文字/扫描/公式）用各自最优的开源引擎转成 Markdown，供 LLM 读取**——分类驱动 + 链式降级 + GPU 常驻，实测批量混合文档 4 秒。
+一句话定位：**把 docx/pptx/xlsx/PDF（文字/扫描/公式）用各自最优的开源引擎转成 Markdown，供 LLM 读取**——分类驱动 + 链式降级 + 可选 GPU 常驻。
+
+**默认轻量**：基础安装只有 CPU torch（~200MB）+ 开源库，Office 转换/文字 PDF/扫描件 OCR 全覆盖，无 GPU 也能用。**2.4GB GPU 模型是可选增强**（理工科/公式/批量扫描件才需要），不装不影响日常。实测批量混合文档 4 秒（GPU 档）。
 
 ---
 
@@ -55,15 +57,20 @@ flowchart TD
 
 ## 快速开始（AI 照做）
 
+> **两档模式，按需选一**：
+> - **轻量版（默认，推荐大多数）**：`bash install.sh` 即可，PyPI 装 CPU torch（~200MB），覆盖 Office 转换 + 文字 PDF + 扫描件 OCR。**不装 2.4GB GPU 模型**——非理工科、不处理公式/批量扫描件的完全够用。
+> - **完整版（理工科/公式/批量扫描件）**：`DOCLING_GPU=1`，额外下载 torch cu126（~2.4GB）+ NVIDIA GPU，公式/复杂版面/批量转换秒级。
+
 ```bash
 # 1. 克隆
 git clone <repo-url> && cd office-workflow
 
-# 2. 安装（选一个）
-bash install.sh                                      # CPU 模式（能用，扫描件慢）
-DOCLING_GPU=1 bash install.sh                        # NVIDIA GPU（torch cu126 ~2.4GB，走阿里云镜像）
-DOCLING_LOCAL_WHEELS=/path/to/wheels bash install.sh # 离线/复用本地 cu126 wheel
-PIP_INDEX=https://pypi.tuna.tsinghua.edu.cn/simple bash install.sh  # 国内加速（可叠加）
+# 2. 安装（二选一，都是全开源）
+bash install.sh                                      # 轻量版：CPU torch ~200MB，默认即可
+DOCLING_GPU=1 bash install.sh                        # 完整版：+GPU cu126 torch ~2.4GB（理工科/公式场景）
+# 其他可叠加选项：
+#   DOCLING_LOCAL_WHEELS=/path/to/wheels  # 离线/复用本地 cu126 wheel（完整版加速）
+#   PIP_INDEX=https://pypi.tuna.tsinghua.edu.cn/simple  # 国内加速
 # 预期输出末尾：
 #   ═══ 安装完成 ═══
 #   下一步（AI 照做即可）：...
@@ -125,6 +132,8 @@ office-workflow/
 | 5 | 分类器单点故障 | pymupdf 阈值兜底 |
 
 ## 已知限制（诚实声明）
+
+- **两档能力边界**：轻量版（默认）覆盖 Office 转换 + 文字 PDF + 扫描件 OCR，公式→LaTeX 与批量扫描件偏慢；完整版（`DOCLING_GPU=1`，+2.4GB）才上 GPU 秒级与复杂版面。日常办公文档两档体验一致。
 
 - **公式→LaTeX 中等**：内联公式可出，块级/复杂公式弱于 MinerU（需另装 Py3.12 + 20GB）
 - **扫描件慢**（CPU 模式）：无 GPU 时每份 ~90s+；GPU + serve 后 ~1s/页
