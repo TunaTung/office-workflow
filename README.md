@@ -20,36 +20,7 @@
 
 ## 架构
 
-```mermaid
-flowchart TD
-    subgraph L1[① 输入]
-        IN1[📄 Office<br/>docx·pptx·xlsx]
-        IN2[📄 PDF 文字版]
-        IN3[🗞 PDF 扫描件]
-        IN4[📐 PDF 公式·复杂]
-    end
-    subgraph L2[② 读取链 · 只读]
-        A1[anydoc<br/>Office→md]
-        A2[pdf-inspector<br/>分类+文字版提取]
-        subgraph SERVE[⚡ docling-serve 常驻 · GPU]
-            A3[docling --scan<br/>OCR]
-            A4[docling 全能力<br/>表格+公式+版面]
-        end
-    end
-    MD[📝 Markdown 中间产物]
-    AGT[🤖 Agent 介入<br/>改·合并·裁剪]
-    subgraph L3[③ 下游]
-        B1[✏️ officecli/x2t<br/>改源文件]
-        B2[🖋 document-skills<br/>新建精排]
-    end
-    OUT[📦 交付 docx / PDF]
-    IN1 --> A1 --> MD
-    IN2 --> A2 --> MD
-    A2 -.空输出降级.-> A3
-    IN3 --> A3 --> MD
-    IN4 --> A4 --> MD
-    MD --> AGT --> B1 & B2 --> OUT
-```
+![Office Workflow 架构图](docs/architecture.png)
 
 **路由思想（灵魂）**：每类文档走最优引擎，任何一个环节失败都有下一档兜底，绝不让一个引擎的故障拖垮整批。
 
