@@ -1,6 +1,6 @@
 # Office Workflow — 文档→Markdown 生产化实践（Windows + NVIDIA GPU）
 
-> 让 AI 读完本文就能在你的电脑上装起来。全部依赖开源，本仓库是"路由思想 + 五个坑解法"的参考实现。
+> 让 AI 读完本文就能在你的电脑上装起来。全部依赖开源，本仓库是"路由思想 + 五个坑解法（+坑04编辑链）"的参考实现。
 
 一句话定位：**把 docx/pptx/xlsx/PDF（文字/扫描/公式）用各自最优的开源引擎转成 Markdown，供 LLM 读取**——分类驱动 + 链式降级 + 可选 GPU 常驻。
 
@@ -76,6 +76,31 @@ bash src/docling.sh md --scan 扫描件.pdf          # 纯扫描件走轻量模�
 python src/convert_docs.py "我的文档/" -r -o out/
 ```
 
+## 编辑链（2026-08-14 实测成型）
+
+读取链产出 md 后，**编辑源文件走独立 DOM 工具链**（全开源，已实测）：
+
+```
+快改（挪表格/改数据/新建）→ aioffice edit --ops（JSON 信封+自动快照+乐观并发）
+保真（修订跟踪/批注/精确格式）→ document-skills:docx（官方插件）+ 方法论
+公式重算验证 → x2t 转 PDF → 读 PDF 文本核对结果（aioffice 不重算，实测）
+交付 → aioffice convert / x2t
+```
+
+**实测能力**：
+```bash
+# 改 Excel 单元格（批量原子，自动快照）
+aioffice edit data.xlsx --ops '[{"op":"set","path":"/'\''实验数据'\''/B2","props":{"value":27.5}}]'
+# docx 加段落/改文字
+aioffice edit report.docx --ops '[{"op":"add","path":"/body","type":"p","props":{"text":"第一节 实验目的"}}]'
+# 跨文档挪表格（xlsx 无原生 move → csv 中转）
+aioffice read 源.xlsx --view csv → aioffice create 目标.xlsx --from 数据.csv
+# 公式结果验证（x2t 渲染时真算）
+x2t formula.xlsx formula.pdf && 读 PDF 文本看 SUM 结果
+```
+
+**编辑链坑（实测）**：xlsx `move`/`add cell` 不支持（结构级 add 可：sheet/table/chart/…）；docx add 段落类型是 `p` 不是 `paragraph`；中文 sheet 名路径要引号 `/'实验数据'/B2`；`--ops` 内引号用 `\u0027` 转义。
+
 ## 目录结构
 
 ```
@@ -92,7 +117,7 @@ office-workflow/
 └── docs/                # 坑解法详解
 ```
 
-## 五个坑解法（详见 docs/）
+## 六个坑解法（详见 docs/）
 
 | # | 坑 | 解法 |
 |---|---|---|
@@ -101,6 +126,7 @@ office-workflow/
 | 3 | 单引擎一刀切脆弱 | 分层路由 + 降级链（`docs/坑03-分层路由与降级链.md`） |
 | 4 | 无 cl.exe torch 报错 | `TORCHDYNAMO_SUPPRESS_ERRORS=1` |
 | 5 | 分类器单点故障 | pymupdf 阈值兜底 |
+| 6 | 编辑链边界不清 | aioffice 实测边界 + csv 中转 + x2t 算公式（`docs/坑04-编辑链.md`） |
 
 ## 已知限制（诚实声明）
 
@@ -108,7 +134,7 @@ office-workflow/
 
 - **公式→LaTeX 中等**：内联公式可出，块级/复杂公式弱于 MinerU（需另装 Py3.12 + 20GB）
 - **扫描件慢**（CPU 模式）：无 GPU 时每份 ~90s+；GPU + serve 后 ~1s/页
-- **编辑链定案不建**：读取产物是 md，"md 变更→回写源文件"无自动 diff 桥（改源请用 officecli 类工具手工），防降维副本覆盖源文件
+- **编辑链（2026-08-14 实测成型，非断点）**：读取产物是 md，**编辑走独立 DOM 工具链**（aioffice 快改 / officecli 备选 / x2t 交付，详见下节）——不是"md 回写源文件"（防降维覆盖），是"直接编辑源文件"。**实测边界**：xlsx 单元格级 move/add 不支持（挪表走 read csv→create --from csv 中转）；docx set/add 全通；公式重算 aioffice 不算但 x2t 渲染时算（转 PDF 验证结果）
 - **依赖第三方二进制**：anydoc/pdf-inspector 需额外安装（见 requirements 注释），未装时对应格式进失败清单，PDF 链不受影响
 
 ## 许可证
