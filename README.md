@@ -89,6 +89,34 @@ flowchart TD
 
 ---
 
+## 复制这套 workflow 需要下载什么
+
+**install.sh 自动装（读取链 + serve，跑通 `bash src/convert_docs.py` 最小集）**：
+
+| 项 | 大小 | 来源 |
+|---|---|---|
+| 仓库代码 | ~1MB | `git clone <repo-url>` |
+| Python 3.10-3.14 | ~100MB | [python.org](https://www.python.org/)（Windows 3.12/3.14 最稳） |
+| torch（install 分支二选一） | CPU ~200MB / GPU cu126 **~2.4GB** | PyPI / 阿里云镜像（GPU 建议 FluxDown/aria2 多线程下） |
+| docling 全家 + fastapi/uvicorn/pymupdf/reportlab/anydoc | ~几百 MB | `pip install -r requirements.txt` |
+| 模型缓存（serve 首次启动） | ~500MB | HuggingFace（国内 `HF_ENDPOINT=https://hf-mirror.com`） |
+
+**需手动装（编辑链 + 质检，install.sh 未含——独立下载）**：
+
+| 项 | 大小 | 获取 |
+|---|---|---|
+| [aioffice](https://github.com/HuiTurn/aioffice)（编辑主力） | ~40MB exe | GitHub Releases |
+| [pdf-inspector](https://github.com/firecrawl)（PDF 分类） | 小 | Firecrawl（本机 `D:\Agent\tool\pdf-inspector`） |
+| [officecli](https://www.npmjs.com/package/@officecli/officecli)（编辑备选） | 小 | `npm i -g @officecli/officecli` |
+| [ONLYOFFICE](https://github.com/ONLYOFFICE) x2t（转换/公式重算） | ~几百 MB | ONLYOFFICE 桌面版/转换器（本机 `D:\知识库\tool\ONLYOFFICE`） |
+| [Qwen-MM-Plugins](https://github.com/QwenLM/Qwen-MM-Plugins)（视觉质检）+ 豆包 key | ~几十 MB + key | GitHub + 火山方舟（可选，换任意 OpenAI 兼容视觉端点亦可） |
+
+**完全可选**：pandoc（互转）、Stirling-PDF（PDF 重活）、ONLYOFFICE 桌面版（GUI 审查）。
+
+> ⚠️ 当前 install.sh 只覆盖**读取链**；编辑链工具（aioffice/pdf-inspector/officecli/x2t）需按上表手动装，装好后 `source config.env` 里的 `PDF_INSPECTOR_SH` 指向 pdf-inspector 即可全链打通。
+
+---
+
 ## 快速开始（AI 照做）
 
 > **两档模式，按需选一**：
@@ -203,4 +231,19 @@ office-workflow/
 
 ## 许可证
 
-本仓库 MIT。依赖均为开源：docling(IBM, MIT)、pdf-inspector(Firecrawl, MIT)、anydoc(Firecrawl)、pymupdf、reportlab、fastapi/uvicorn。
+本仓库 MIT。上游工具均为开源（点击进入官方仓库）：
+
+| 工具 | 作用 | 上游（许可） |
+|---|---|---|
+| [docling](https://github.com/docling-project/docling) | 读取链：扫描件 OCR / 复杂版面 / 公式 | IBM（MIT） |
+| [anydoc](https://github.com/firecrawl/anydoc) | 读取链：Office→md | Firecrawl |
+| [pdf-inspector](https://github.com/firecrawl) | 读取链：PDF 分类 + 文字版提取 | Firecrawl |
+| [aioffice](https://github.com/HuiTurn/aioffice) | 编辑链主力：DOM 直编 + 快照 + 渲染 | HuiTurn |
+| [officecli](https://www.npmjs.com/package/@officecli/officecli) | 编辑链备选：DOM 读写 | npm |
+| [ONLYOFFICE](https://github.com/ONLYOFFICE) | 交付链：x2t 转换 / 公式重算 / GUI 审查 | ONLYOFFICE |
+| [pymupdf](https://github.com/pymupdf/PyMuPDF) | 兜底分类 / PDF→PNG 质检 | PyMuPDF（AGPL/商业） |
+| [RapidOCR](https://github.com/RapidAI/RapidOCR) | 扫描件 OCR 引擎（docling 内置） | RapidAI |
+| [fastapi](https://github.com/fastapi/fastapi) + [uvicorn](https://github.com/encode/uvicorn) | serve 常驻服务 | FastAPI（MIT） |
+| [pandoc](https://github.com/jgm/pandoc) | 文档互转（可选） | JGM（GPL） |
+| [Qwen-MM-Plugins](https://github.com/QwenLM/Qwen-MM-Plugins) | 视觉质检：渲染成图后看图查缺陷 | QwenLM |
+| [Stirling-PDF](https://github.com/Stirling-Tools/Stirling-PDF) | PDF 重活（可选，OCR/水印/签名） | Stirling（Apache-2.0） |
