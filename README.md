@@ -20,9 +20,68 @@
 
 ## 架构
 
-![Office Workflow 架构图](docs/architecture.png)
+```mermaid
+flowchart TD
+    %% ① 输入
+    subgraph L1[① 输入]
+        IN1[📄 Office<br/>docx·pptx·xlsx]
+        IN2[📄 PDF 文字版]
+        IN3[🗞 PDF 扫描件]
+        IN4[📐 PDF 公式·复杂]
+    end
 
-**路由思想（灵魂）**：每类文档走最优引擎，任何一个环节失败都有下一档兜底，绝不让一个引擎的故障拖垮整批。
+    %% ② 读取链（只读，不改源）
+    subgraph L2[② 读取链 · doc-to-md · 只读]
+        A1[anydoc<br/>Office→md]
+        A2[pdf-inspector<br/>分类 + 文字版提取]
+        subgraph SERVE[⚡ docling-serve 常驻 · GPU]
+            A3[docling --scan<br/>OCR 中文]
+            A4[docling 全能力<br/>表格+公式+版面]
+        end
+    end
+
+    %% 中间产物 + Agent 介入
+    MD[📝 Markdown 中间产物<br/>表格HTML + 公式LaTeX]
+    AGT[🤖 Agent 介入<br/>改·合并·裁剪]
+
+    %% ③ 编辑链（DOM 直编源文件，实测成型）
+    subgraph L3[③ 编辑链 · DOM 直编 · 实测]
+        B1[✏️ aioffice<br/>快改 · edit --ops 快照]
+        B2[📐 officecli<br/>备选 · set/move/swap]
+        B3[🖋 document-skills:docx<br/>保真 · 修订/批注]
+    end
+
+    %% 转换交付
+    CVT[🔄 convert · x2t 渲染<br/>公式重算验证]
+    OUT[📦 交付<br/>docx / PDF]
+
+    %% 连线
+    IN1 --> A1
+    IN2 --> A2
+    IN3 --> A3
+    IN4 --> A4
+    A1 --> MD
+    A2 --> MD
+    A2 -.空输出降级.-> A3
+    A3 --> MD
+    A4 --> MD
+    MD --> AGT
+    AGT --> B1 & B2 & B3
+    B1 --> CVT
+    B2 --> CVT
+    B3 --> CVT
+    CVT --> OUT
+
+    %% 状态：🟢实测 / 🟡未实测 / 🔵GPU底座
+    classDef ok fill:#dcfce7,stroke:#22c55e,color:#166534
+    classDef nok fill:#fef9c3,stroke:#eab308,color:#92400e
+    classDef base fill:#e0f2fe,stroke:#38bdf8,color:#075985
+    class A2,A3,A4,MD,AGT,B1,B2,CVT,OUT ok
+    class A1,B3 nok
+    class SERVE base
+```
+
+**路由思想（灵魂）**：每类文档走最优引擎，任何一个环节失败都有下一档兜底，绝不让一个引擎的故障拖垮整批。**编辑链直接 DOM 编辑源文件**（非 md 回写），快改/保真/转换三层分工。
 
 ---
 
