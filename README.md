@@ -101,7 +101,7 @@ flowchart TD
 | docling 全家 + fastapi/uvicorn/pymupdf/reportlab/anydoc | ~几百 MB | `pip install -r requirements.txt` |
 | 模型缓存（serve 首次启动） | ~500MB | HuggingFace（国内 `HF_ENDPOINT=https://hf-mirror.com`） |
 
-**需手动装（编辑链 + 质检，install.sh 未含——独立下载）**：
+**需手动装（编辑链，install.sh 未含——独立下载）**：
 
 | 项 | 大小 | 获取 |
 |---|---|---|
@@ -109,7 +109,8 @@ flowchart TD
 | [pdf-inspector](https://github.com/firecrawl)（PDF 分类） | 小 | Firecrawl（本机 `D:\Agent\tool\pdf-inspector`） |
 | [officecli](https://www.npmjs.com/package/@officecli/officecli)（编辑备选） | 小 | `npm i -g @officecli/officecli` |
 | [ONLYOFFICE](https://github.com/ONLYOFFICE) x2t（转换/公式重算） | ~几百 MB | ONLYOFFICE 桌面版/转换器（本机 `D:\知识库\tool\ONLYOFFICE`） |
-| [Qwen-MM-Plugins](https://github.com/QwenLM/Qwen-MM-Plugins)（视觉质检）+ 豆包 key | ~几十 MB + key | GitHub + 火山方舟（可选，换任意 OpenAI 兼容视觉端点亦可） |
+
+**视觉质检零下载**：仓库内置 `qa.sh`（纯 urllib 调视觉端点），只需一个 OpenAI 兼容视觉 API key（本机用火山豆包，`ARK_API_KEY` 环境变量），**不需要安装任何视觉工具**（Qwen-MM-Plugins 之类对质检过重）。
 
 **完全可选**：pandoc（互转）、Stirling-PDF（PDF 重活）、ONLYOFFICE 桌面版（GUI 审查）。
 
@@ -245,5 +246,6 @@ office-workflow/
 | [RapidOCR](https://github.com/RapidAI/RapidOCR) | 扫描件 OCR 引擎（docling 内置） | RapidAI |
 | [fastapi](https://github.com/fastapi/fastapi) + [uvicorn](https://github.com/encode/uvicorn) | serve 常驻服务 | FastAPI（MIT） |
 | [pandoc](https://github.com/jgm/pandoc) | 文档互转（可选） | JGM（GPL） |
-| [Qwen-MM-Plugins](https://github.com/QwenLM/Qwen-MM-Plugins) | 视觉质检：渲染成图后看图查缺陷 | QwenLM |
+| [qa.sh（本仓库内置）](src/qa.sh) | 视觉质检：纯 urllib 调视觉端点看图，零依赖 | 本仓库 |
+| [火山方舟豆包](https://www.volcengine.com/product/ark) | 视觉质检模型（也可换任意 OpenAI 兼容视觉端点） | 火山引擎（可选） |
 | [Stirling-PDF](https://github.com/Stirling-Tools/Stirling-PDF) | PDF 重活（可选，OCR/水印/签名） | Stirling（Apache-2.0） |
