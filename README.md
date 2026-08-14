@@ -1,6 +1,10 @@
 # Office Workflow — AI 文档代工流水线（Windows + NVIDIA GPU）
 
-> 让 AI 读完本文就能在你的电脑上装起来。全部依赖开源，本仓库是"AI 代工文档"的完整参考实现——**从读取到质检，AI 全程自主，Markdown 只是中间产物**。
+> **给 AI 的一句话安装入口**：把这行发给你的 Agent ——
+> `请按 https://github.com/TunaTung/office-workflow 的 README 帮我安装这套文档代工流水线（我是非理工科/理工科，需要/不需要编辑和公式）`
+> Agent 会读完下文自行安装：读取链自动装，编辑链/重型工具按你的场景提示手动装。
+
+全部依赖开源，本仓库是"AI 代工文档"的完整参考实现——**从读取到质检，AI 全程自主，Markdown 只是中间产物**。
 
 一句话定位：**让 AI 看懂（读取链）→ 改得动（编辑链）→ 交得出（交付链）→ 验得了（视觉质检）docx/pptx/xlsx/PDF**，每个环节用最优开源引擎，分类驱动 + 链式降级 + GPU 常驻。
 
@@ -89,9 +93,25 @@ flowchart TD
 
 ---
 
-## 复制这套 workflow 需要下载什么
+## 按需安装（先看你要做什么，再决定装多重）
 
-**install.sh 自动装（读取链 + serve，跑通 `bash src/convert_docs.py` 最小集）**：
+| 你的需求 | 需要装什么 | 总量 | 装法 |
+|---|---|---|---|
+| **只读文档**（转 md / 提取 / 喂 LLM） | 读取链全件 | ~1GB | `bash install.sh` 自动装，**5 分钟搞定** |
+| **+ 改文档**（改数据/挪表/新建报告） | 上一行 + 编辑链工具 | +~50MB | 手动装：aioffice + pdf-inspector（officecli 可选） |
+| **+ 交付 PDF / 公式重算** | 上一行 + ONLYOFFICE x2t | +~几百 MB | 手动装 ONLYOFFICE（桌面版/转换器） |
+| **+ 视觉质检**（AI 自检排版） | 只需一个视觉 API key | 0 下载 | 仓库内置 `qa.sh`，设 `ARK_API_KEY` 即可 |
+| **+ GPU 秒级**（公式/批量扫描件） | `DOCLING_GPU=1` 装 cu126 | +2.4GB | install.sh GPU 分支（理工科才需要） |
+| **+ PDF 重活**（OCR/水印/签名） | Stirling-PDF | ~几百 MB | 可选，按需启停 |
+
+**核心判断**：
+- **非理工科 / 只读不改** → 只跑 `install.sh`，之后什么都不要装
+- **理工科 / 要改要交付** → + 编辑链 + ONLYOFFICE（这是"重型工具"的主要场景）
+- **要 AI 质检** → 永远只加一个 key，零下载
+
+**分档明细**：
+
+**install.sh 自动装（读取链）**：
 
 | 项 | 大小 | 来源 |
 |---|---|---|
@@ -101,7 +121,7 @@ flowchart TD
 | docling 全家 + fastapi/uvicorn/pymupdf/reportlab/anydoc | ~几百 MB | `pip install -r requirements.txt` |
 | 模型缓存（serve 首次启动） | ~500MB | HuggingFace（国内 `HF_ENDPOINT=https://hf-mirror.com`） |
 
-**需手动装（编辑链，install.sh 未含——独立下载）**：
+**手动装（编辑链 + 交付，按场景决定）**：
 
 | 项 | 大小 | 获取 |
 |---|---|---|
@@ -110,17 +130,17 @@ flowchart TD
 | [officecli](https://www.npmjs.com/package/@officecli/officecli)（编辑备选） | 小 | `npm i -g @officecli/officecli` |
 | [ONLYOFFICE](https://github.com/ONLYOFFICE) x2t（转换/公式重算） | ~几百 MB | ONLYOFFICE 桌面版/转换器（本机 `D:\知识库\tool\ONLYOFFICE`） |
 
-**视觉质检零下载**：仓库内置 `qa.sh`（纯 urllib 调视觉端点），只需一个 OpenAI 兼容视觉 API key（本机用火山豆包，`ARK_API_KEY` 环境变量），**不需要安装任何视觉工具**（Qwen-MM-Plugins 之类对质检过重）。
+**视觉质检零下载**：仓库内置 `qa.sh`（纯 urllib 调视觉端点），只需 `ARK_API_KEY`（火山豆包或其他 OpenAI 兼容视觉端点），不需要安装任何视觉工具。
 
 **完全可选**：pandoc（互转）、Stirling-PDF（PDF 重活）、ONLYOFFICE 桌面版（GUI 审查）。
 
-> ⚠️ 当前 install.sh 只覆盖**读取链**；编辑链工具（aioffice/pdf-inspector/officecli/x2t）需按上表手动装，装好后 `source config.env` 里的 `PDF_INSPECTOR_SH` 指向 pdf-inspector 即可全链打通。
+> ⚠️ 安装边界：`install.sh` 覆盖**读取链**（跑通 `convert_docs.py` 即最小可用）；编辑链工具按上表手动装，装好后 `source config.env` 里 `PDF_INSPECTOR_SH` 指向 pdf-inspector 即全链打通。**甩给 Agent 时把"我是非理工科/理工科、需要/不需要编辑"说清楚，它就知道该装到哪一档。**
 
 ---
 
-## 快速开始（AI 照做）
+## 快速开始（把这段发给 Agent，它照做即可）
 
-> **两档模式，按需选一**：
+> Agent 入口：以下命令是给 AI 执行的最小安装路径——按你的场景在"按需安装"表里选档（只读 → 跑 install.sh 即可；要编辑 → 按表手动装编辑链）。
 > - **轻量版（默认，推荐大多数）**：`bash install.sh` 即可，PyPI 装 CPU torch（~200MB），覆盖 Office 转换 + 文字 PDF + 扫描件 OCR。**不装 2.4GB GPU 模型**——非理工科、不处理公式/批量扫描件的完全够用。
 > - **完整版（理工科/公式/批量扫描件）**：`DOCLING_GPU=1`，额外下载 torch cu126（~2.4GB）+ NVIDIA GPU，公式/复杂版面/批量转换秒级。
 
