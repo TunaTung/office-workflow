@@ -28,43 +28,43 @@
 
 ```mermaid
 flowchart TD
-    %% ═══ ① 素材输入 ═══
-    subgraph L1[📥 ① 素材输入]
+    %% ═══ ① 输入层 ═══
+    subgraph L1[📥 ① 输入]
         direction LR
-        IN1[📄 Office 文件<br/>docx·pptx·xlsx]
+        IN1[📄 Office<br/>docx·pptx·xlsx]
         IN2[📄 PDF 文字版]
         IN3[🗞 PDF 扫描件]
-        IN4[📐 PDF 混合·公式]
+        IN4[📐 PDF 公式·复杂]
     end
 
-    %% ═══ ② 读取工具 ═══
-    subgraph L2[📖 ② 读取工具 · doc-to-md · 只读]
+    %% ═══ ② 读取链 ═══
+    subgraph L2[📖 ② 读取链 · 只读 · doc-to-md]
         direction LR
-        A1[anydoc<br/>🟢 Office→md 30ms]
-        A2[pdf-inspector<br/>🟢 分类+文字版提取]
+        A1[anydoc<br/>🟢 30ms]
+        A2[pdf-inspector<br/>🟢 分类+提取]
         subgraph SERVE[⚡ docling-serve · GPU 常驻]
             direction LR
-            A3[docling --scan<br/>🟢 扫描件OCR 1s/页]
-            A4[docling 全能力<br/>🟢 混合·公式·表格]
+            A3[--scan<br/>🟢 OCR 1s/页]
+            A4[全能力<br/>🟢 表格+公式]
         end
     end
 
     %% ═══ 中间产物 ═══
-    MD[📝 Markdown 产出<br/>表格HTML + 公式LaTeX]
+    MD[📝 Markdown 中间产物<br/>表格HTML + 公式LaTeX]
     AGT[🤖 Agent 介入<br/>改·合并·裁剪]
 
-    %% ═══ ③ 编辑工具 ═══
-    subgraph L3[✏️ ③ 编辑工具 · DOM 直编源文件]
+    %% ═══ ③ 编辑链 ═══
+    subgraph L3[✏️ ③ 编辑链 · DOM 直编]
         direction LR
         B1[aioffice<br/>🟢 快改·快照]
-        B2[officecli<br/>🟢 DOM 备选]
-        B3[document-skills:docx<br/>🟢 修订·批注]
+        B2[officecli<br/>🟢 备选]
+        B3[保真层<br/>🟢 修订·批注]
     end
 
-    %% ═══ ④ 交付工具 + 产出 ═══
-    CVT[aioffice convert / x2t<br/>🟢 转PDF·公式重算]
-    OUT[📦 交付产出<br/>docx · PDF]
-    QA[qa.sh 视觉质检<br/>🟢 看图查缺陷]
+    %% ═══ ④ 交付+质检 ═══
+    CVT[🔄 convert / x2t<br/>🟢 公式重算]
+    OUT[📦 交付<br/>docx / PDF]
+    QA[👁 视觉质检<br/>qa.sh · 🟢 看图查缺陷]
 
     %% ═══ 连线（主链贯通） ═══
     IN1 --> A1
@@ -88,7 +88,7 @@ flowchart TD
     QA -.❌ 有缺陷·回修.-> B1
     QA -.❌ 有缺陷·回修.-> B3
 
-    %% ═══ 配色（语义：主链绿 / 底座蓝 / 回环红 / 核心紫） ═══
+    %% ═══ 配色（语义：主链绿 / 底座蓝 / 回环红） ═══
     classDef main fill:#dcfce7,stroke:#16a34a,stroke-width:1.5,color:#14532d
     classDef core fill:#ede9fe,stroke:#7c3aed,stroke-width:2,color:#4c1d95
     classDef base fill:#e0f2fe,stroke:#0284c7,stroke-dasharray:5 4,color:#0c4a6e
