@@ -76,8 +76,8 @@ flowchart TD
     classDef ok fill:#dcfce7,stroke:#22c55e,color:#166534
     classDef nok fill:#fef9c3,stroke:#eab308,color:#92400e
     classDef base fill:#e0f2fe,stroke:#38bdf8,color:#075985
-    class A2,A3,A4,MD,AGT,B1,B2,CVT,OUT ok
-    class A1,B3 nok
+    class A2,A3,A4,MD,AGT,B1,B2,B3,CVT,OUT ok
+    class A1 ok
     class SERVE base
 ```
 
