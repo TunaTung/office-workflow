@@ -28,41 +28,45 @@
 
 ```mermaid
 flowchart TD
-    %% ① 输入
-    subgraph L1[① 输入]
-        IN1[📄 Office<br/>docx·pptx·xlsx]
+    %% ═══ ① 素材输入 ═══
+    subgraph L1[📥 ① 素材输入]
+        direction LR
+        IN1[📄 Office 文件<br/>docx·pptx·xlsx]
         IN2[📄 PDF 文字版]
         IN3[🗞 PDF 扫描件]
-        IN4[📐 PDF 公式·复杂]
+        IN4[📐 PDF 混合·公式]
     end
 
-    %% ② 读取链（只读，不改源）
-    subgraph L2[② 读取链 · doc-to-md · 只读]
-        A1[anydoc<br/>Office→md]
-        A2[pdf-inspector<br/>分类 + 文字版提取]
-        subgraph SERVE[⚡ docling-serve 常驻 · GPU]
-            A3[docling --scan<br/>OCR 中文]
-            A4[docling 全能力<br/>表格+公式+版面]
+    %% ═══ ② 读取工具 ═══
+    subgraph L2[📖 ② 读取工具 · doc-to-md · 只读]
+        direction LR
+        A1[anydoc<br/>🟢 Office→md 30ms]
+        A2[pdf-inspector<br/>🟢 分类+文字版提取]
+        subgraph SERVE[⚡ docling-serve · GPU 常驻]
+            direction LR
+            A3[docling --scan<br/>🟢 扫描件OCR 1s/页]
+            A4[docling 全能力<br/>🟢 混合·公式·表格]
         end
     end
 
-    %% 中间产物 + Agent 介入
-    MD[📝 Markdown 中间产物<br/>表格HTML + 公式LaTeX]
+    %% ═══ 中间产物 ═══
+    MD[📝 Markdown 产出<br/>表格HTML + 公式LaTeX]
     AGT[🤖 Agent 介入<br/>改·合并·裁剪]
 
-    %% ③ 编辑链（DOM 直编源文件，实测成型）
-    subgraph L3[③ 编辑链 · DOM 直编 · 实测]
-        B1[✏️ aioffice<br/>快改 · edit --ops 快照]
-        B2[📐 officecli<br/>备选 · set/move/swap]
-        B3[🖋 document-skills:docx<br/>保真 · 修订/批注]
+    %% ═══ ③ 编辑工具 ═══
+    subgraph L3[✏️ ③ 编辑工具 · DOM 直编源文件]
+        direction LR
+        B1[aioffice<br/>🟢 快改·快照]
+        B2[officecli<br/>🟢 DOM 备选]
+        B3[document-skills:docx<br/>🟢 修订·批注]
     end
 
-    %% 转换交付 + 视觉质检（闭环）
-    CVT[🔄 convert · x2t 渲染<br/>公式重算验证]
-    OUT[📦 交付<br/>docx / PDF]
-    QA[👁 视觉质检<br/>render→PNG→视觉模型看图<br/>截断/溢出/豆腐块]
+    %% ═══ ④ 交付工具 + 产出 ═══
+    CVT[aioffice convert / x2t<br/>🟢 转PDF·公式重算]
+    OUT[📦 交付产出<br/>docx · PDF]
+    QA[qa.sh 视觉质检<br/>🟢 看图查缺陷]
 
-    %% 连线
+    %% ═══ 连线（主链贯通） ═══
     IN1 --> A1
     IN2 --> A2
     IN3 --> A3
@@ -79,17 +83,23 @@ flowchart TD
     B3 --> CVT
     CVT --> OUT
     OUT --> QA
-    QA -.有缺陷·修复重渲染.-> B1
-    QA -.有缺陷·修复重渲染.-> B3
 
-    %% 状态：🟢实测 / 🔵GPU底座
-    classDef ok fill:#dcfce7,stroke:#22c55e,color:#166534
-    classDef base fill:#e0f2fe,stroke:#38bdf8,color:#075985
-    class A1,A2,A3,A4,MD,AGT,B1,B2,B3,CVT,OUT,QA ok
+    %% ═══ 质检回环（闭环关键） ═══
+    QA -.❌ 有缺陷·回修.-> B1
+    QA -.❌ 有缺陷·回修.-> B3
+
+    %% ═══ 配色（语义：主链绿 / 底座蓝 / 回环红 / 核心紫） ═══
+    classDef main fill:#dcfce7,stroke:#16a34a,stroke-width:1.5,color:#14532d
+    classDef core fill:#ede9fe,stroke:#7c3aed,stroke-width:2,color:#4c1d95
+    classDef base fill:#e0f2fe,stroke:#0284c7,stroke-dasharray:5 4,color:#0c4a6e
+    classDef loop fill:#fee2e2,stroke:#dc2626,stroke-dasharray:5 4,color:#7f1d1d
+    class A1,A2,A3,A4,B1,B2,B3,CVT,OUT,QA main
+    class MD,AGT core
     class SERVE base
+    class QA loop
 ```
 
-**闭环思想（灵魂）**：① 看懂（读取链，每类文档最优引擎 + 链式降级）→ ② 改得动（编辑链，DOM 直编源文件非 md 回写）→ ③ 交得出（转换/渲染交付）→ ④ 验得了（**视觉质检**：渲染成图 → 视觉模型看图查截断/溢出/豆腐块 → 有缺陷回编辑链修复重渲染）。AI 全流程自主，Markdown 只是看懂环节的中间产物。
+**闭环思想（灵魂）**：素材（Office/PDF 各型）→ 读取工具（anydoc/pdf-inspector/docling）→ Markdown 产出 → Agent 介入 → 编辑工具（aioffice/officecli/document-skills）→ 交付产出（docx/PDF）→ 视觉质检（qa.sh）→ 有缺陷回编辑工具修复重渲染。AI 全流程自主，Markdown 只是看懂环节的中间产物。
 
 ---
 
