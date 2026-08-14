@@ -1,10 +1,12 @@
-# Office Workflow — 文档→Markdown 生产化实践（Windows + NVIDIA GPU）
+# Office Workflow — AI 文档代工流水线（Windows + NVIDIA GPU）
 
-> 让 AI 读完本文就能在你的电脑上装起来。全部依赖开源，本仓库是"路由思想 + 五个坑解法（+坑04编辑链）"的参考实现。
+> 让 AI 读完本文就能在你的电脑上装起来。全部依赖开源，本仓库是"AI 代工文档"的完整参考实现——**从读取到质检，AI 全程自主，Markdown 只是中间产物**。
 
-一句话定位：**把 docx/pptx/xlsx/PDF（文字/扫描/公式）用各自最优的开源引擎转成 Markdown，供 LLM 读取**——分类驱动 + 链式降级 + 可选 GPU 常驻。
+一句话定位：**让 AI 看懂（读取链）→ 改得动（编辑链）→ 交得出（交付链）→ 验得了（视觉质检）docx/pptx/xlsx/PDF**，每个环节用最优开源引擎，分类驱动 + 链式降级 + GPU 常驻。
 
-**默认轻量**：基础安装只有 CPU torch（~200MB）+ 开源库，Office 转换/文字 PDF/扫描件 OCR 全覆盖，无 GPU 也能用。**2.4GB GPU 模型是可选增强**（理工科/公式/批量扫描件才需要），不装不影响日常。实测批量混合文档 4 秒（GPU 档）。
+**为什么不是"文档→Markdown"**：转 md 只是第一段——它让你看懂文档；真正牛的是**后半段**：aioffice 直接编辑源文件（DOM+快照+乐观并发）、x2t/convert 交付 PDF、**视觉质检环**（渲染成图 → 视觉模型看图查排版缺陷 → 修复重渲染），这才是"AI 代工"而非"AI 阅读"。
+
+**默认轻量**：基础安装只有 CPU torch（~200MB）+ 开源库，读取全覆盖；**2.4GB GPU 模型是可选增强**（公式/批量扫描件秒级）。实测批量混合文档 4 秒（GPU 档）。
 
 ---
 
@@ -51,9 +53,10 @@ flowchart TD
         B3[🖋 document-skills:docx<br/>保真 · 修订/批注]
     end
 
-    %% 转换交付
+    %% 转换交付 + 视觉质检（闭环）
     CVT[🔄 convert · x2t 渲染<br/>公式重算验证]
     OUT[📦 交付<br/>docx / PDF]
+    QA[👁 视觉质检<br/>render→PNG→视觉模型看图<br/>截断/溢出/豆腐块]
 
     %% 连线
     IN1 --> A1
@@ -71,17 +74,18 @@ flowchart TD
     B2 --> CVT
     B3 --> CVT
     CVT --> OUT
+    OUT --> QA
+    QA -.有缺陷·修复重渲染.-> B1
+    QA -.有缺陷·修复重渲染.-> B3
 
-    %% 状态：🟢实测 / 🟡未实测 / 🔵GPU底座
+    %% 状态：🟢实测 / 🔵GPU底座
     classDef ok fill:#dcfce7,stroke:#22c55e,color:#166534
-    classDef nok fill:#fef9c3,stroke:#eab308,color:#92400e
     classDef base fill:#e0f2fe,stroke:#38bdf8,color:#075985
-    class A2,A3,A4,MD,AGT,B1,B2,B3,CVT,OUT ok
-    class A1 ok
+    class A1,A2,A3,A4,MD,AGT,B1,B2,B3,CVT,OUT,QA ok
     class SERVE base
 ```
 
-**路由思想（灵魂）**：每类文档走最优引擎，任何一个环节失败都有下一档兜底，绝不让一个引擎的故障拖垮整批。**编辑链直接 DOM 编辑源文件**（非 md 回写），快改/保真/转换三层分工。
+**闭环思想（灵魂）**：① 看懂（读取链，每类文档最优引擎 + 链式降级）→ ② 改得动（编辑链，DOM 直编源文件非 md 回写）→ ③ 交得出（转换/渲染交付）→ ④ 验得了（**视觉质检**：渲染成图 → 视觉模型看图查截断/溢出/豆腐块 → 有缺陷回编辑链修复重渲染）。AI 全流程自主，Markdown 只是看懂环节的中间产物。
 
 ---
 
@@ -176,7 +180,7 @@ office-workflow/
 └── docs/                # 坑解法详解
 ```
 
-## 六个坑解法（详见 docs/）
+## 七个坑解法（详见 docs/）
 
 | # | 坑 | 解法 |
 |---|---|---|
@@ -186,6 +190,7 @@ office-workflow/
 | 4 | 无 cl.exe torch 报错 | `TORCHDYNAMO_SUPPRESS_ERRORS=1` |
 | 5 | 分类器单点故障 | pymupdf 阈值兜底 |
 | 6 | 编辑链边界不清 | aioffice 实测边界 + csv 中转 + x2t 算公式（`docs/坑04-编辑链.md`） |
+| 7 | AI 看不见排版缺陷 | 视觉质检环：render→PNG→视觉模型看图（`docs/坑05-视觉质检环.md`） |
 
 ## 已知限制（诚实声明）
 
