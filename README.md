@@ -28,74 +28,52 @@
 
 ```mermaid
 flowchart TD
-    %% ═══ ① 输入层 ═══
-    subgraph L1[📥 ① 输入]
-        direction LR
-        IN1[📄 Office<br/>docx·pptx·xlsx]
+    subgraph S1[📥 素材输入]
+        IN1[📄 Office<br/>docx · pptx · xlsx]
         IN2[📄 PDF 文字版]
-        IN3[🗞 PDF 扫描件]
-        IN4[📐 PDF 公式·复杂]
+        IN3[🗞 PDF 扫描件 · 混合]
     end
 
-    %% ═══ ② 读取链 ═══
-    subgraph L2[📖 ② 读取链 · 只读 · doc-to-md]
-        direction LR
+    subgraph S2[📖 读取工具 · 只读]
         A1[anydoc<br/>🟢 30ms]
         A2[pdf-inspector<br/>🟢 分类+提取]
-        subgraph SERVE[⚡ docling-serve · GPU 常驻]
-            direction LR
-            A3[--scan<br/>🟢 OCR 1s/页]
-            A4[全能力<br/>🟢 表格+公式]
-        end
+        A3[docling · GPU 常驻<br/>🟢 OCR 1s/页 · 表格+公式]
     end
 
-    %% ═══ 中间产物 ═══
-    MD[📝 Markdown 中间产物<br/>表格HTML + 公式LaTeX]
-    AGT[🤖 Agent 介入<br/>改·合并·裁剪]
+    MD[📝 Markdown 产出<br/>表格HTML + 公式LaTeX]
+    AGT[🤖 Agent 介入<br/>改 · 合并 · 裁剪]
 
-    %% ═══ ③ 编辑链 ═══
-    subgraph L3[✏️ ③ 编辑链 · DOM 直编]
-        direction LR
+    subgraph S3[✏️ 编辑工具 · DOM 直编]
         B1[aioffice<br/>🟢 快改·快照]
-        B2[officecli<br/>🟢 备选]
-        B3[保真层<br/>🟢 修订·批注]
+        B2[officecli · 保真层<br/>🟢 DOM · 修订·批注]
     end
 
-    %% ═══ ④ 交付+质检 ═══
     CVT[🔄 convert / x2t<br/>🟢 公式重算]
-    OUT[📦 交付<br/>docx / PDF]
-    QA[👁 视觉质检<br/>qa.sh · 🟢 看图查缺陷]
+    OUT[📦 交付产出<br/>docx · PDF]
+    QA[👁 qa.sh 视觉质检<br/>🟢 看图查缺陷]
 
-    %% ═══ 连线（主链贯通） ═══
     IN1 --> A1
     IN2 --> A2
     IN3 --> A3
-    IN4 --> A4
     A1 --> MD
     A2 --> MD
     A2 -.空输出降级.-> A3
     A3 --> MD
-    A4 --> MD
     MD --> AGT
-    AGT --> B1 & B2 & B3
+    AGT --> B1
+    AGT --> B2
     B1 --> CVT
     B2 --> CVT
-    B3 --> CVT
     CVT --> OUT
     OUT --> QA
-
-    %% ═══ 质检回环（闭环关键） ═══
     QA -.❌ 有缺陷·回修.-> B1
-    QA -.❌ 有缺陷·回修.-> B3
+    QA -.❌ 有缺陷·回修.-> B2
 
-    %% ═══ 配色（语义：主链绿 / 底座蓝 / 回环红） ═══
     classDef main fill:#dcfce7,stroke:#16a34a,stroke-width:1.5,color:#14532d
     classDef core fill:#ede9fe,stroke:#7c3aed,stroke-width:2,color:#4c1d95
-    classDef base fill:#e0f2fe,stroke:#0284c7,stroke-dasharray:5 4,color:#0c4a6e
     classDef loop fill:#fee2e2,stroke:#dc2626,stroke-dasharray:5 4,color:#7f1d1d
-    class A1,A2,A3,A4,B1,B2,B3,CVT,OUT,QA main
+    class A1,A2,A3,B1,B2,CVT,OUT main
     class MD,AGT core
-    class SERVE base
     class QA loop
 ```
 
